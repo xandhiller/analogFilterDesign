@@ -1,6 +1,7 @@
 # Aiming to make a program that does the calculation for the low-pass prototype
 import math
 import logging
+from pprint import pprint
 
 # Logging config:
 logging.basicConfig(level=logging.CRITICAL, format= ' %(asctime)s - %(levelname)s - %(message)s')
@@ -180,10 +181,11 @@ def runBP():
 
 def printQ0():
     Q0 = {2: (0.707), 3: (1.00), 4: (0.541, 1.307), 5: (0.618, 1.618), 6: (0.518, 0.707, 1.932), 7: (0.555, 0.802, 2.247), 8: (0.510, 0.601, 0.900, 2.563), 9: (0.532, 0.653, 1.000, 2.879), 10: (0.506, 0.561, 0.707, 1.101, 3.196)}
+   
+     
     # Print out the values neatly
-    print("n", end='\t')
-    for i in range(0, len(Q0)-1):
-        print(str(Q0[i]), end="\t")
+    print("Key of dictionary = n, values = Q0 values")
+    pprint(Q0)
         
     
  
