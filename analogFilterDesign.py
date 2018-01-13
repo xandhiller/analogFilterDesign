@@ -5,7 +5,7 @@ from pprint import pprint
 from decimal import Decimal
 
 # Logging config:
-logging.basicConfig(level=logging.DEBUG, format= ' %(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.CRITICAL, format= ' %(asctime)s - %(levelname)s - %(message)s')
 
 # LPP = "Low Pass Prototype"
 def LP(K0, Ks, Kp, OmegaP, OmegaS):
@@ -75,17 +75,17 @@ def geffeAlgorithm(Omega0, q, QLP):
     # Algorithm is listed on page 3.31 of the Analog Electronics Notes
 
     D = Omega0 / (QLP*q)
-
+    logging.debug("D is: " + str(D))
     E = 4 + math.pow(Omega0/q, 2)
-
+    logging.debug('E is: ' + str(E))
     G = math.sqrt( math.pow(E,2) - 4*math.pow(D,2)  )
-
+    logging.debug('G is: ' + str(G))
     Q0 = (1/D)*math.sqrt((1/2)*(E+G))
-
+    logging.debug('Q0 is: ' + str(Q0))
     K = D*Q0/2
-
+    logging.debug('K is: ' + str(K))
     W = K + math.sqrt(math.pow(K,2)-1)
-
+    logging.debug('W is: ' + str(W))
     return W, Q0
 
 
@@ -107,6 +107,7 @@ def BP(K0, Ks, Kp, w1, w2, w3, w4):
 
     # OmegaS is equal to this equation by the working shown on page 3.26 of the Analog Electronics Notes
     OmegaS = ( float(w4) - float(w3) ) / ( float(w2) - float(w1) )
+    logging.debug("OmegaS in the BP is: " + str(OmegaS))
 
     # Calculate w0
     w0 = math.sqrt(w1*w2)
@@ -119,9 +120,10 @@ def BP(K0, Ks, Kp, w1, w2, w3, w4):
 
     # Run the LPP calculation and save the outputs
     n, Omega0 = LP(K0, Ks, Kp, OmegaP, OmegaS)
+    logging.debug("Omega0 is: " + str(Omega0))
 
     # Going to assume that QLP = 1 as per the calculations in pg 3.36, seems as though this is the standard output of the LPP, but I'm not sure.
-    QLP = 1
+    QLP = 0.7071067811865475 # TODO: Add functionality that QLP is chosen based on output n from tuple with Q0 values
 
     # Get the conversion factor so that we can have two different circuits with the same Q0 but different cutoff frequencies.
     W, Q0 = geffeAlgorithm(Omega0, q, QLP)
@@ -141,8 +143,8 @@ def BP(K0, Ks, Kp, w1, w2, w3, w4):
 # Input cutoff frequency, output cut off frequency
 # Output their ranges that Km will be.
 def getValues():
-    R = [] # Resistor array
-    C = [] # Capacitor array
+    R = [] # Resistor list
+    C = [] # Capacitor list
 
     # Get size of R
     Rlen = int(input("Enter number of resistors in the filter: "))
@@ -211,58 +213,65 @@ def flexibleScaling():
     logging.debug("KmBoundaries Dictionary is: \n" + str(KmBoundaries))
 
     # Print values of constraints from each Resistor and Capacitor
-    print("CONSTRAINTS: ")
+    print("\nCONSTRAINTS: ")
     for i in range(len(C)):
         print('C'+str(i+1) + ': \t' + KmBoundaries['C'+str(i+1)][0] + "\t< Km <\t" + KmBoundaries["C"+str(i+1)][1])
     for i in range(len(R)):
          print('R'+str(i+1) + ': \t' + KmBoundaries['R'+str(i+1)][0] + "\t< Km <\t" + KmBoundaries["R"+str(i+1)][1])
 
 
-    KmLower = 0
-    KmUpper = 0
+    KmLower = "0"
+    KmUpper = "1E+100"
     # Find the actual net constraints:
+    logging.debug("len(C) is: "+str(len(C)))
+    logging.debug("len(R) is: "+str(len(R)))
     for i in range(len(C)):
-        if KmLower < KmBoundaries['C'+str(i+1)][0]:
+        logging.debug("KmBoundaries['C"+str(i+1)+"'][0] = 0"+str(KmBoundaries['C'+str(i+1)][0]))
+        logging.debug("KmBoundaries['C"+str(i+1)+"'][1] = "+str(KmBoundaries['C'+str(i+1)][1]))
+        if Decimal(KmLower) < Decimal(KmBoundaries['C'+str(i+1)][0]):
             KmLower = KmBoundaries['C'+str(i+1)][0]
-    for i in range(len(R)):
-        if KmLower < KmBoundaries['R'+str(i+1)][0]:
-            KmLower = KmBoundaries['R'+str(i+1)][0]
-    for i in range(len(C):
-        if KmUpper > KmBoundaries['C'+str(i+1)][1]:
+        logging.debug("KmLower on iteration "+str(i)+" for C is: "+str(KmLower))
+        if Decimal(KmUpper) > Decimal(KmBoundaries['C'+str(i+1)][1]):
             KmUpper = KmBoundaries['C'+str(i+1)][1]
+        logging.debug("KmUpper on iteration "+str(i)+" for C is: "+str(KmUpper))
+
     for i in range(len(R)):
-        if KmUpper > KmBoundaries['R'+str(i+1)][1]:
+        logging.debug("KmBoundaries['R"+str(i+1)+"'][0] = "+str(KmBoundaries['R'+str(i+1)][0]))
+        logging.debug("KmBoundaries['R"+str(i+1)+"'][1] = "+str(KmBoundaries['R'+str(i+1)][1]))
+        if Decimal(KmLower) < Decimal(KmBoundaries['R'+str(i+1)][0]):
+            KmLower = KmBoundaries['R'+str(i+1)][0]
+        logging.debug("KmLower on iteration "+str(i)+" for R is: "+str(KmLower))
+        if Decimal(KmUpper) > Decimal(KmBoundaries['R'+str(i+1)][1]):
             KmUpper =  KmBoundaries['R'+str(i+1)][1]
+        logging.debug("KmUpper on iteration "+str(i)+" for R is: "+str(KmUpper))
 
     # Print net constraints
-    print()
+    print("\nNET CONSTRAINTS:")
+    print(str(KmLower) + "\t<\tKm\t<\t" + str(KmUpper))
+
+    # Print Kf
+    print("Kf (frequency scaling factor) is: "+str(Kf))
+
+    #TODO: allow for choosing between selecting Km, selecting Cap values or selecting R values
+    # TODO: If no constraint on the circuit elements, output a suitable Km (middle of the boundaries)?
+
+    Km = Decimal(str((input("What would you like Km to be? (enter a float)\n"))))
 
 
+    logging.debug("R is: ")
+    for i in range(len(R)):
+        Rprime.append(str(Km*R[i]))          # Based on scaling equations
+    for i in range(len(C)):
+        Cprime.append(str((1/(Km*Kf))*C[i])) # Based on scaling equations
 
-    # Do any of the final values have to be constrained to a particular value?
-    # if so, enter.
-    # Then calculate the Km needed for those values.
-    # Then see if they lie in the boundaries given.
-    # If not, output a
+    # Print new values
+    print("New R values are: ")
+    for i in range(len(Rprime)-1):
+        print("R" + str(i+1) + ": " + str(Rprime))
 
-    # Output a suitable Km (middle of the boundaries)
-
-
-#    for i in len(R):
-#        Rprime.append(Km*R[i])          # Based on scaling equations
-#    for i in len(C):
-#        Cprime.append((1/(Km*Kf))*C[i]) # Based on scaling equations
-#
-#    # Print new values
-#    print("New R values are: ")
-#    for i in range(len(Rprime)-1):
-#        print("R" + str(i+1) + ": " + str(Rprime))
-#
-#    print("New C values are: ")
-#    for i in range(len(Cprime)-1):
-#        print("C" + str(i+1) + ": " + str(Cprime))
-#
-
+    print("New C values are: ")
+    for i in range(len(Cprime)-1):
+        print("C" + str(i+1) + ": " + str(Cprime))
 
 
 # The run functions. Will be removed when GUI is made.
