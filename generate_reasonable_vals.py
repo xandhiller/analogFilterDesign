@@ -1,19 +1,27 @@
 #! /usr/bin/python3.7 --
+
 import pandas as pd
 
-# Create all reasonable e192 e192_vals
-df = pd.read_csv('e192_vals_per_decade.csv', delimiter=',')
-e192_vals = [float(row[0]) for row in df.values]
+
+def generate():
+    nbs = ['192', '96', '48', '24', '12', '6', '3']
+    for nb in nbs:
+        print(nb)
+        # Create all reasonable e192 e192_vals
+        source_filename = 'e' + nb + '_vals_per_decade.csv'
+        df = pd.read_csv(source_filename, delimiter=',')
+        e192_vals = [float(row[0]) for row in df.values]
+        output_filename = 'reasonable_e' + nb + '_vals.csv'
+        f = open(output_filename, 'w')
+        f.write('vals,\n')
+        for i in range(-12, 10, 1):
+            for val in e192_vals:
+                f.write(str(val*10**i) + ',\n')
+        f.close()
+
 
 def main():
-    f = open('reasonable_e192_vals.csv', 'w')
-    f.write('vals,\n')
-    for i in range(-12, 10, 1):
-        for val in e192_vals:
-            f.write(str(val*10**i) + ',\n')
-    f.close()
-
-
+    generate()
 
 if __name__ == '__main__':
     main()
