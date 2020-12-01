@@ -7,6 +7,17 @@ df = pd.read_csv('reasonable_e192_vals.csv', delimiter=',')
 e192_vals = [float(row[0]) for row in df.values]
 
 
+all_series_tolerances = {
+        'e192' : 0.005,
+        'e96'  : 0.01,
+        'e48'  : 0.02,
+        'e24'  : 0.05,
+        'e12'  : 0.10,
+        'e6'   : 0.20,
+        'e3'   : 0.40,
+}
+
+
 # Standard impedance calculations
 def r_parallel(resistor_a, resistor_b):
     return resistor_a*resistor_b/(resistor_a + resistor_b)
@@ -66,7 +77,10 @@ def find_closest_impedance(value, impedance=r_parallel, series='e192'):
             else:
                 resulting_impedance = impedance(closest_pair[0], closest_pair[1])
                 impedance_error = 1-abs(resulting_impedance/value)
-                return [closest_pair, resulting_impedance, impedance_error] 
+                series_tolerance = all_series_tolerances[series]
+                tolerance_effects = [series_tolerance, resulting_impedance*(1-series_tolerance),
+                    resulting_impedance*(1+series_tolerance)]
+                return [closest_pair, resulting_impedance, impedance_error, tolerance_effects]
 
 
 def main():
