@@ -1,3 +1,5 @@
+#! /usr/bin/python3.7 --
+
 # Aim is to make a program that does the calculation for the low-pass prototype
 import math
 import logging
@@ -89,17 +91,25 @@ def geffeAlgorithm(Omega0, q, QLP):
     return W, Q0
 
 
+Q0_butterworth_poles = dict(
+        [(2, (0.707)),
+        (3, (1.00)),
+        (4, (0.541, 1.307)),
+        (5, (0.618, 1.618)),
+        (6, (0.518, 0.707, 1.932))]
+)
+
 def BP(K0, Ks, Kp, w1, w2, w3, w4):
     # Recall that for the bandpass LPP transformation, the transform is S = (1/bw)(1/s)(s^2 + w0^2)
 
     # Check if conditions satisfied for use of the bandpass transformation
-    if (math.ceil(math.sqrt(w1*w2)) != math.ceil(math.sqrt(w3*w4))):
+    if math.ceil(math.sqrt(w1*w2)) != math.ceil(math.sqrt(w3*w4)):
         print(
         "The criteria for a bandpass transformation into the LPP is not satisfied.",
         "\nPlease reconsider your choices for w1, w2, w3 and w4 and make sure they satisfy the criterion:",
         "\n\tw0 = sqrt(w1*w2) \t& \tw0 = sqrt(w3*w4)"
-        )
-        exit
+        ) 
+        return
     # Hence if the conditions are met, then Ω = (w^2-w0^2)(1/w)(1/[w2-w1])
 
     # OmegaP = 1 because when w = w2, Ω = 1. If confused, please consult Analog Electronics Notes pg 3.26
@@ -122,17 +132,14 @@ def BP(K0, Ks, Kp, w1, w2, w3, w4):
     n, Omega0 = LP(K0, Ks, Kp, OmegaP, OmegaS)
     logging.debug("Omega0 is: " + str(Omega0))
 
-    # Going to assume that QLP = 1 as per the calculations in pg 3.36, seems as though this is the standard output of the LPP, but I'm not sure.
-    QLP = 0.7071067811865475 # TODO: Add functionality that QLP is chosen based on output n from tuple with Q0 values
+    # WARNING: Hardcoded 
+    QLP = 0.707
 
     # Get the conversion factor so that we can have two different circuits with the same Q0 but different cutoff frequencies.
     W, Q0 = geffeAlgorithm(Omega0, q, QLP)
-
     # Can now have two cascaded circuits with different w0's but the same Q0's.
-
     # Centre frequency of the first circuit
     w01 = W*w0
-
     # Centre frequency of the second circuit
     w02 = (1/W)*w0
 
@@ -283,7 +290,7 @@ def runBP():
     w2 = float(input("Enter w2: "))
     w3 = float(input("Enter w3: "))
     w4 = float(input("Enter w4: "))
-    Q0, w01, w02, q, n = BP(K0, Ks, Kp, w1, w2, w3, w4) #TODO: Outputs of this function may change
+    Q0, w01, w02, q, n = BP(K0, Ks, Kp, w1, w2, w3, w4) 
     logging.debug("Q0 is: " + str(Q0))
     logging.debug("w01: " + str(w01))
     logging.debug("w02 is: " + str(w02))
@@ -325,8 +332,56 @@ def printQ0():
 
 
 def main():
-    print()
-    #TODO: Insert a switch statement between all possible functionalities, allowing users to select each function that they want.
+    K0 = 0
+    Ks = 10
+    Kp = 0.8
+    w1 = 300*2*math.pi
+    w2 = 3000*2*math.pi
+    w3 = 100*2*math.pi
+    w4 = 9000*2*math.pi
+    Q0, w01, w02, q, n = BP(K0, Ks, Kp, w1, w2, w3, w4)
+    pprint(f" Value of Q0  {Q0}" )
+    pprint(f" Value of w01 {w01}" )
+    pprint(f" Value of w02 {w02}" )
+    pprint(f" Value of q   {q}" )
+    pprint(f" Value of n   {n}" )
+    
+    # Elements 1 and 2 are for the first circuit, 3 and 4 -- the second
+    R1 = 1
+    R2 = 4*Q0
+    R3 = 1
+    R4 = 4*Q0
+    C1 = 0.5*Q0
+    C2 = 0.5*Q0
+    C3 = 0.5*Q0
+    C4 = 0.5*Q0
+
+    # Scaling parameters
+    km = 1000
+    kf_1 = w01/1
+    kf_2 = w02/1
+
+    # New values
+    R1_new = km * R1
+    R2_new = km * R2
+    R3_new = km * R3
+    R4_new = km * R4
+    C1_new = 1/(km*kf_1) * C1
+    C2_new = 1/(km*kf_1) * C2
+    C3_new = 1/(km*kf_2) * C3
+    C4_new = 1/(km*kf_2) * C4
+
+    pprint(f"R1_new is: {R1_new}")
+    pprint(f"R2_new is: {R2_new}")
+    pprint(f"R3_new is: {R3_new}")
+    pprint(f"R4_new is: {R4_new}")
+    pprint(f"C1_new is: {C1_new}")
+    pprint(f"C2_new is: {C2_new}")
+    pprint(f"C3_new is: {C3_new}")
+    pprint(f"C4_new is: {C4_new}")
+    
+
+
 
 if __name__ == "__main__":
     main()
