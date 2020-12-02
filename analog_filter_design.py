@@ -5,6 +5,7 @@ import math
 import logging
 from pprint import pprint
 from decimal import Decimal
+from resistor_vals import *
 
 # Logging config:
 logging.basicConfig(level=logging.CRITICAL, format= ' %(asctime)s - %(levelname)s - %(message)s')
@@ -380,7 +381,28 @@ def main():
     pprint(f"C3_new is: {C3_new}")
     pprint(f"C4_new is: {C4_new}")
     
-
+    for series in all_series_tolerances.keys():
+        for i in range(80):
+            print("-", end='')
+        print()
+        print("Series: " + series)
+        pprint(f"R1_new tolerance results:")
+        print(find_closest_impedance(R1_new, impedance=r_parallel, series=series))
+        pprint(f"R2_new tolerance results:")
+        print(find_closest_impedance(R2_new, impedance=r_parallel, series=series))
+        pprint(f"R3_new tolerance results:")
+        print(find_closest_impedance(R3_new, impedance=r_parallel, series=series))
+        pprint(f"R4_new tolerance results:")
+        print(find_closest_impedance(R4_new, impedance=r_parallel, series=series))
+        pprint(f"C1_new tolerance results:")
+        print(find_closest_impedance(C1_new, impedance=c_series, series=series))
+        pprint(f"C2_new tolerance results:")
+        print(find_closest_impedance(C2_new, impedance=c_series, series=series))
+        pprint(f"C3_new tolerance results:")
+        print(find_closest_impedance(C3_new, impedance=c_series, series=series))
+        pprint(f"C4_new tolerance results:")
+        print(find_closest_impedance(C4_new, impedance=c_series, series=series))
+     
 
 
 if __name__ == "__main__":
